@@ -5,6 +5,7 @@
 		_Ratio ("Ratio", Range(0.0, 1.0)) = 0.5
 		_MainTex ("Texture", 2D) = "white" {}
         _OutputTex ("Output", 2D) = "white" {}
+        _OutputNormalTex ("OutputNormal", 2D) = "white" {}
     }
 
     SubShader
@@ -37,6 +38,8 @@
             float4 _MainTex_ST;
 			sampler2D _OutputTex;
 			float4 _OutputTex_ST;
+			sampler2D _OutputNormalTex;
+			float4 _OutputNormalTex_ST;
 
             v2f vert (appdata v)
             {

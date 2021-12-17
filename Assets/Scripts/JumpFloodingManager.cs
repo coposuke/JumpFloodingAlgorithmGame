@@ -21,9 +21,13 @@ public class JumpFloodingManager : MonoBehaviour
 	private RenderTexture outputRenderTexture;
 
 	[SerializeField]
+	private RenderTexture outputNormalRenderTexture;
+
+	[SerializeField]
 	private Material material;
 
 	private Texture2D outputTexture = default;
+	private Texture2D outputNormalTexture = default;
 
 	/// <summary>
 	/// Unity Override Awake
@@ -70,6 +74,7 @@ public class JumpFloodingManager : MonoBehaviour
 		commandBuffer.Blit(rtArray[JumpCount % rtCount], outputRenderTexture);
 		commandBuffer.ReleaseTemporaryRT(RT0);
 		commandBuffer.ReleaseTemporaryRT(RT1);
+		commandBuffer.Blit(outputRenderTexture, outputNormalRenderTexture, this.material, 2);
 
 		this.targetCamera.AddCommandBuffer(CameraEvent.BeforeDepthTexture, commandBuffer);
 		this.targetCamera.AddCommandBuffer(CameraEvent.BeforeGBuffer, commandBuffer);
@@ -78,6 +83,13 @@ public class JumpFloodingManager : MonoBehaviour
 			this.outputRenderTexture.width,
 			this.outputRenderTexture.height,
 			TextureFormat.RGBA32, false, false);
+
+		this.outputNormalTexture = new Texture2D(
+			this.outputNormalRenderTexture.width,
+			this.outputNormalRenderTexture.height,
+			TextureFormat.RGBA32, false, false);
+
+		OnPostRender();
 	}
 
 	/// <summary>
@@ -89,6 +101,10 @@ public class JumpFloodingManager : MonoBehaviour
 
 		RenderTexture.active = this.outputRenderTexture;
 		this.outputTexture.ReadPixels(new Rect(0, 0, this.outputTexture.width, this.outputTexture.height), 0, 0);
+
+		RenderTexture.active = this.outputNormalRenderTexture;
+		this.outputNormalTexture.ReadPixels(new Rect(0, 0, this.outputNormalTexture.width, this.outputNormalTexture.height), 0, 0);
+
 		RenderTexture.active = temp;
 	}
 
@@ -102,10 +118,10 @@ public class JumpFloodingManager : MonoBehaviour
 		if (instance == null)
 			return;
 
-		int x = Mathf.RoundToInt(uv.x * instance.outputTexture.width);
-		int y = Mathf.RoundToInt(uv.y * instance.outputTexture.height);
+		uv.x = Mathf.Clamp01(uv.x);
+		uv.y = Mathf.Clamp01(uv.y);
 
-		var color = instance.outputTexture.GetPixel(x, y, 0);
+		var color = instance.outputTexture.GetPixelBilinear(uv.x, uv.y, 0);
 		point = new Vector2(color.r, color.g);
 	}
 
@@ -120,10 +136,10 @@ public class JumpFloodingManager : MonoBehaviour
 		if (instance == null)
 			return;
 
-		int x = Mathf.RoundToInt(uv.x * instance.outputTexture.width);
-		int y = Mathf.RoundToInt(uv.y * instance.outputTexture.height);
+		uv.x = Mathf.Clamp01(uv.x);
+		uv.y = Mathf.Clamp01(uv.y);
 
-		var color = instance.outputTexture.GetPixel(x, y, 0);
+		var color = instance.outputTexture.GetPixelBilinear(uv.x, uv.y, 0);
 		point = new Vector2(color.r, color.g);
 		distance = color.b * (1f - color.a);
 	}
@@ -131,20 +147,27 @@ public class JumpFloodingManager : MonoBehaviour
 	/// <summary>
 	/// 一番近い地点と向きと距離を返す
 	/// </summary>
-	public static void Get(Vector2 uv, out Vector2 point, out Vector2 dir, out float distance)
+	public static void Get(Vector2 uv, out Vector2 point, out Vector2 normal, out float distance)
 	{
-		point = dir = Vector2.zero;
+		point = normal = Vector2.zero;
 		distance = 0f;
 
 		if (instance == null)
 			return;
 
-		int x = Mathf.RoundToInt(uv.x * instance.outputTexture.width);
-		int y = Mathf.RoundToInt(uv.y * instance.outputTexture.height);
+		uv.x = Mathf.Clamp01(uv.x);
+		uv.y = Mathf.Clamp01(uv.y);
 
-		var color = instance.outputTexture.GetPixel(x, y, 0);
+		var color = Color.clear;
+		
+		color = instance.outputTexture.GetPixelBilinear(uv.x, uv.y, 0);
 		point = new Vector2(color.r, color.g);
-		dir = (uv - point).normalized;
-		distance = color.b * -(color.a * 2f - 1f);
+
+		//distance = color.b * -(color.a * 2f - 1f); // color.bは精度が低かったので再計算する
+		distance = Vector2.Distance(uv, point) * -(color.a * 2f - 1f);
+
+		color = instance.outputNormalTexture.GetPixelBilinear(uv.x, uv.y, 0);
+		normal = new Vector2(color.r * 2.0f - 1.0f, color.g * 2.0f - 1.0f);
+		normal.Normalize();
 	}
 }
