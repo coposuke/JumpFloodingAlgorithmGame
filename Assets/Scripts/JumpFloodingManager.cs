@@ -3,13 +3,14 @@ using UnityEngine.Rendering;
 
 /// <summary>
 /// Jump Flooding Algorithm Manager
+/// マップの距離情報を作成、および情報管理します
 /// </summary>
 public class JumpFloodingManager : MonoBehaviour
 {
 	private static JumpFloodingManager instance;
-	private readonly int RT0 = Shader.PropertyToID("temp0");
-	private readonly int RT1 = Shader.PropertyToID("temp1");
-	private readonly int ShaderParam_StepLength = Shader.PropertyToID("_StepLength");
+	private static readonly int RT0 = Shader.PropertyToID("temp0");
+	private static readonly int RT1 = Shader.PropertyToID("temp1");
+	private static readonly int ShaderParam_StepLength = Shader.PropertyToID("_StepLength");
 
 	[SerializeField]
 	private Camera targetCamera;
@@ -76,7 +77,7 @@ public class JumpFloodingManager : MonoBehaviour
 		commandBuffer.ReleaseTemporaryRT(RT1);
 		commandBuffer.Blit(outputRenderTexture, outputNormalRenderTexture, this.material, 2);
 
-		this.targetCamera.AddCommandBuffer(CameraEvent.BeforeDepthTexture, commandBuffer);
+        this.targetCamera.AddCommandBuffer(CameraEvent.BeforeDepthTexture, commandBuffer);
 		this.targetCamera.AddCommandBuffer(CameraEvent.BeforeGBuffer, commandBuffer);
 
 		this.outputTexture = new Texture2D(
@@ -92,26 +93,29 @@ public class JumpFloodingManager : MonoBehaviour
 		OnPostRender();
 	}
 
-	/// <summary>
-	/// Unity Override OnPostRender
-	/// </summary>
-	private void OnPostRender()
-	{
-		var temp = RenderTexture.active;
+    /// <summary>
+    /// Unity Override OnPostRender
+    /// </summary>
+    private void OnPostRender()
+    {
+        var temp = RenderTexture.active;
 
-		RenderTexture.active = this.outputRenderTexture;
-		this.outputTexture.ReadPixels(new Rect(0, 0, this.outputTexture.width, this.outputTexture.height), 0, 0);
+        // すごい重い処理してます
+        // 都度取得するでもいいかもしれない
 
-		RenderTexture.active = this.outputNormalRenderTexture;
-		this.outputNormalTexture.ReadPixels(new Rect(0, 0, this.outputNormalTexture.width, this.outputNormalTexture.height), 0, 0);
+        RenderTexture.active = this.outputRenderTexture;
+        this.outputTexture.ReadPixels(new Rect(0, 0, this.outputTexture.width, this.outputTexture.height), 0, 0);
 
-		RenderTexture.active = temp;
-	}
+        RenderTexture.active = this.outputNormalRenderTexture;
+        this.outputNormalTexture.ReadPixels(new Rect(0, 0, this.outputNormalTexture.width, this.outputNormalTexture.height), 0, 0);
 
-	/// <summary>
-	/// 一番近い地点を返す
-	/// </summary>
-	public static void Get(Vector2 uv, out Vector2 point)
+        RenderTexture.active = temp;
+    }
+
+    /// <summary>
+    /// 一番近い地点を返す
+    /// </summary>
+    public static void Get(Vector2 uv, out Vector2 point)
 	{
 		point = Vector2.zero;
 
@@ -168,6 +172,7 @@ public class JumpFloodingManager : MonoBehaviour
 
 		color = instance.outputNormalTexture.GetPixelBilinear(uv.x, uv.y, 0);
 		normal = new Vector2(color.r * 2.0f - 1.0f, color.g * 2.0f - 1.0f);
-		normal.Normalize();
-	}
+        normal.Normalize();
+        normal *= Mathf.Sign(distance);
+    }
 }

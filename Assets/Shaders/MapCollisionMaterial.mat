@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: MapMaterial
+  m_Name: MapCollisionMaterial
   m_Shader: {fileID: 4800000, guid: 861e60d2e5118ba4ea81bd34d25619fa, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4

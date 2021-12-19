@@ -1,0 +1,84 @@
+﻿#pragma kernel CSUpdate
+
+struct ParticleData
+{
+	float active;
+	float radius;
+	float2 position;
+	float2 velocity;
+};
+
+Texture2D<float4> _OutputTexture;
+SamplerState sampler_OutputTexture;
+Texture2D<float4> _OutputNormalTexture;
+SamplerState sampler_OutputNormalTexture;
+
+RWStructuredBuffer<ParticleData> _Particles;
+float _DeltaTime;
+
+
+[numthreads(128, 1, 1)]
+void CSUpdate(uint3 id : SV_DispatchThreadID)
+{
+	ParticleData data = _Particles[id.x];
+
+	if (data.active <= 0.0)
+		return;
+
+	data.velocity.y -= 9.81 * 0.5 * _DeltaTime * _DeltaTime * 100;
+
+	float2 estimate = data.position + data.velocity;
+	float2 uv = estimate / 1024.0;
+	uv = saturate(uv);
+	uv.y = 1.0 - uv.y;
+
+	float4 output = _OutputTexture.SampleLevel(sampler_OutputTexture, uv, 0.0);
+	output.a = step(0.5, output.a);
+	float2 seed = output.rg;
+	float into = sign(-(output.a * 2.0 - 1.0));
+	float dist = distance(uv, seed) * into;
+
+	if (dist <= data.radius / 1024.0)
+	{
+		// 押し返し
+		float2 normal = float2(0, 0);
+		normal = _OutputNormalTexture.SampleLevel(sampler_OutputNormalTexture, uv, 0.0).xy;
+		normal = normal * 2.0 - 1.0;
+		normal *= into;
+
+		data.position = seed + normal * (data.radius / 1024.0);
+		uv = data.position;
+		uv = saturate(uv);
+		uv.y = 1.0 - uv.y;
+		data.position *= 1024.0;
+
+		// 再取得
+		output = _OutputTexture.SampleLevel(sampler_OutputTexture, uv, 0.0);
+		output.a = step(0.5, output.a);
+		seed = output.rg;
+		into = sign(-(output.a * 2.0 - 1.0));
+		dist = distance(uv, seed) * into;
+		normal = _OutputNormalTexture.SampleLevel(sampler_OutputNormalTexture, uv, 0.0).xy;
+		normal = normal * 2.0 - 1.0;
+		normal *= into;
+
+		// 反発
+		float2 vn = dot(data.velocity, normal) * normal;
+		data.velocity = data.velocity - vn * 1.5;
+
+		// TODO: seed=0,0になる不具合がある
+		data.active = step(1e-2, distance(float2(0, 0), data.position));
+		data.active *= step(1e-2, length(data.velocity));
+	}
+	else
+	{
+		data.position = estimate;
+	}
+
+	_Particles[id.x] = data;
+}
+
+[numthreads(1024, 1, 1)]
+void CSActive(uint3 id : SV_DispatchThreadID)
+{
+}

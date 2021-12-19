@@ -1,0 +1,4 @@
+[*.cs]
+[*.shader]
+[*.compute]
+charset=utf-8-bom
