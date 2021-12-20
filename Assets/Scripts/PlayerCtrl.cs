@@ -15,13 +15,19 @@ public class PlayerCtrl : MonoBehaviour
 	private Vector3 velocity = default;
 
 
+	/// <summary>
+	/// Unity Override Start
+	/// </summary>
     private void Start()
     {
         var renderer = this.GetComponent<MeshRenderer>();
         renderer.material.color = new Color(0.52f, 0.40f, 0.64f);
     }
 
-    private void Update()
+	/// <summary>
+	/// Unity Override Update
+	/// </summary>
+	private void Update()
     {
         this.velocity.x -= Mathf.Sign(this.velocity.x) * 0.2f; // 適当な減衰
         this.velocity.y -= 9.81f * 0.5f * Time.deltaTime * Time.deltaTime * 100f;
@@ -62,25 +68,6 @@ public class PlayerCtrl : MonoBehaviour
             bomb.radius = 1f;
         }
 
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            Vector2 pos = Matrix4x4.Rotate(Quaternion.Euler(0f, 0f, Time.time * 48f)) * (Vector2.one * 30f);
-            pos += Vector2.one * 100f;
-
-            CircleParticleManager.Emit(new Vector2[]{ pos, }, new Vector2[] { Vector2.up });
-
-            var list = new System.Collections.Generic.List<Vector2>(100);
-            for (int x = 0; x < 20; ++x)
-            {
-                for (int y = 0; y < 20; ++y)
-                {
-                    list.Add(new Vector2(x, y) / 20f * 1024f);
-                }
-            }
-
-            //CircleParticleManager.Emit(list.ToArray());
-        }
-
         var estimate = this.transform.position + this.velocity;
 
 		var point = Vector2.zero;
@@ -110,6 +97,9 @@ public class PlayerCtrl : MonoBehaviour
 	}
 
 #if UNITY_EDITOR
+	/// <summary>
+	/// Unity Override OnDrawGizmos
+	/// </summary>
 	private void OnDrawGizmos()
 	{
 		var estimate = this.transform.position + this.velocity;

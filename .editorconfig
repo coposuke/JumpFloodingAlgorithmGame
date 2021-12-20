@@ -2,3 +2,4 @@
 [*.shader]
 [*.compute]
 charset=utf-8-bom
+end_of_line = lf

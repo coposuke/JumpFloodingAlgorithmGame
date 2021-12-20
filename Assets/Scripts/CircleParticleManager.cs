@@ -40,11 +40,11 @@ public class CircleParticleManager : MonoBehaviour
 
     private ParticleData[] data = default;
     private ComputeBuffer buffer = default;
+    private ComputeBuffer argBuffer = default;
     private int kernelIndex = 0;
     private int activeIndex = 0;
     private RenderTexture tempRenderTexture = default;
     private RenderTexture tempNormalRenderTexture = default;
-    private ComputeBuffer argBuffer = default;
 
 
     /// <summary>
@@ -57,8 +57,6 @@ public class CircleParticleManager : MonoBehaviour
         else
             DestroyImmediate(this.gameObject);
     }
-
-    private ComputeBuffer positionBuffer;
 
     /// <summary>
     /// Unity Override Start
@@ -105,6 +103,9 @@ public class CircleParticleManager : MonoBehaviour
         this.argBuffer.SetData(arg);
     }
 
+    /// <summary>
+    /// Unity Override OnDestroy
+    /// </summary>
     private void OnDestroy()
     {
         if (this.buffer != null)
@@ -125,6 +126,9 @@ public class CircleParticleManager : MonoBehaviour
         this.tempNormalRenderTexture = null;
     }
 
+    /// <summary>
+    /// Unity Override Update
+    /// </summary>
     private void Update()
     {
         // 本来はoutputRenderTextureはJumpFloodingManagerのプログラム内で作成されるべき
@@ -142,6 +146,11 @@ public class CircleParticleManager : MonoBehaviour
         Graphics.DrawMeshInstancedIndirect(this.mesh, 0, this.meshMaterial, new Bounds(Vector3.one * 512f, Vector3.one * 1024f), this.argBuffer);
     }
 
+    /// <summary>
+    /// パーティクルを発生させる
+    /// </summary>
+    /// <param name="positions"></param>
+    /// <param name="velocities"></param>
     static public void Emit(Vector2 [] positions, Vector2 [] velocities)
     {
         if (instance == null)

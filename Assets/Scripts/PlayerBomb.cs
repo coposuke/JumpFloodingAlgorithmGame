@@ -8,6 +8,10 @@ public class PlayerBomb : MonoBehaviour
     public float radius = 1f;
     public Vector3 velocity = default;
 
+
+    /// <summary>
+    /// Unity Override Update
+    /// </summary>
     private void Update()
     {
         this.velocity.y -= 9.81f * 0.5f * Time.deltaTime * Time.deltaTime * 100f;

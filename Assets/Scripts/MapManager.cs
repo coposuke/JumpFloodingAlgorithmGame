@@ -37,11 +37,20 @@ public class MapManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Unity Override OnDestroy
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (instance == this)
+            instance = null;
+    }
+
+    /// <summary>
     /// 地形を削る
     /// </summary>
     /// <param name="uv">削る中心点</param>
     /// <param name="radius">削る半径</param>
-    public static void Scrape(Vector3 uv, float radius)
+    public static void Scrape(Vector2 uv, float radius)
     {
         if (instance == null)
             return;

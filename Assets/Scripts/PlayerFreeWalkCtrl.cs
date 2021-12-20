@@ -10,7 +10,11 @@ public class PlayerFreeWalkCtrl : MonoBehaviour
 	private RenderTexture outputRenderTexture = default;
 
 	private Texture2D outputTexture = default;
+	
 
+	/// <summary>
+	/// Unity Override Start
+	/// </summary>
 	private void Start()
 	{
 		this.outputTexture = new Texture2D(
@@ -19,7 +23,9 @@ public class PlayerFreeWalkCtrl : MonoBehaviour
 			TextureFormat.RGBA32, false, false);
 	}
 
-
+	/// <summary>
+	/// Unity Override Update
+	/// </summary>
 	private void Update()
 	{
 		UpdateColliderTexture();
@@ -60,6 +66,9 @@ public class PlayerFreeWalkCtrl : MonoBehaviour
 	private float dist;
 
 #if UNITY_EDITOR
+	/// <summary>
+	/// Unity Override OnDrawGizmos
+	/// </summary>
 	private void OnDrawGizmos()
 	{
 		using (new UnityEditor.Handles.DrawingScope(new Color(0.72f, 0.60f, 0.84f)))

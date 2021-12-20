@@ -77,8 +77,3 @@ void CSUpdate(uint3 id : SV_DispatchThreadID)
 
 	_Particles[id.x] = data;
 }
-
-[numthreads(1024, 1, 1)]
-void CSActive(uint3 id : SV_DispatchThreadID)
-{
-}

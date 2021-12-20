@@ -30,6 +30,7 @@ public class JumpFloodingManager : MonoBehaviour
 	private Texture2D outputTexture = default;
 	private Texture2D outputNormalTexture = default;
 
+
 	/// <summary>
 	/// Unity Override Awake
 	/// </summary>
@@ -46,7 +47,8 @@ public class JumpFloodingManager : MonoBehaviour
 	/// </summary>
 	private void OnDestroy()
 	{
-		instance = null;
+		if (instance == this)
+			instance = null;
 	}
 
 	/// <summary>
@@ -67,7 +69,7 @@ public class JumpFloodingManager : MonoBehaviour
 		const int JumpCount = 8;
 		for (int i = 0; i < JumpCount; ++i)
 		{
-			float stepLength = Mathf.Clamp(Mathf.Pow(2.0f, (JumpCount - i) - 1), 1f, 1024f);
+			float stepLength = Mathf.Pow(2.0f, (JumpCount - i) - 1);
 			commandBuffer.SetGlobalFloat(ShaderParam_StepLength, stepLength);
 			commandBuffer.Blit(rtArray[i % rtCount], rtArray[(i + 1) % rtCount], this.material, 1);
 		}

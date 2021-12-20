@@ -2,7 +2,7 @@
 {
     Properties
     {
-		_Ratio ("Ratio", Range(0.0, 1.0)) = 0.5
+		_Ratio ("Ratio", Range(0.0, 2.0)) = 0.5
 		_MainTex ("Texture", 2D) = "white" {}
         _OutputTex ("Output", 2D) = "white" {}
         _OutputNormalTex ("OutputNormal", 2D) = "white" {}
@@ -54,13 +54,14 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float dist = tex2D(_OutputTex, i.uv).b;
-				float grad = dist * 6.28218 * 30.0 - _Time.y * 10.0;
+				float grad = dist * UNITY_PI * 60.0 - _Time.y * 10.0;
 				float3 output = lerp(float3(1,1,1), cos(float3(0,2,4) + grad) * 0.15 + 0.8, step(0.001, dist));
+                float3 outputNormal = saturate(tex2D(_OutputNormalTex, i.uv).rgb);
 
 				fixed4 col = lerp(
 					tex2D(_MainTex, i.uv),
-					fixed4(output, 0.0),
-					_Ratio
+                    lerp(float4(output, 0.0), float4(outputNormal, 0.0), saturate(_Ratio - 1.0)),
+					saturate(_Ratio)
 				);
 
 				return col;
